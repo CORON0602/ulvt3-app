@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <title>ULVT - 上肢リハビリ支援</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .app {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 24px;
+      border-radius: 15px;
+    }
+
+    h1 {
+      color: #147d70;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin: 10px 0 20px;
+    }
+
+    .camera {
+      background: #233b3b;
+      color: white;
+      height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .records {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .record {
+      flex: 1;
+      background: #eef5f3;
+      padding: 15px;
+      text-align: center;
+      border-radius: 10px;
+    }
+
+    .record strong {
+      display: block;
+      font-size: 25px;
+      margin-top: 8px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 16px;
+      font-size: 17px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .start {
+      background: #147d70;
+      color: white;
+    }
+
+    .stop {
+      background: #e2e7e7;
+      color: #333;
+    }
+
+    .note {
+      color: #666;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+    
+
+.camera {
+  overflow: hidden;
+}
+
+#cameraVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.camera-buttons {
+  margin-top: 12px;
+}
+
+#cameraStatus {
+  font-size: 14px;
+  color: #555;
+  margin-top: 10px;
+}
+
+#recordedVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* モデル動画の左右反転 */
+.mirrored {
+  transform: scaleX(-1);
+}
+
+/* 撮影できないときのボタン */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#recordingStatus {
+  color: #555;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* 重ね合わせ画面 */
+.overlay-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #233b3b;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+/* 2つの映像を同じ位置に配置 */
+.overlay-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* リアルタイム映像 */
+#liveOverlayVideo {
+  z-index: 1;
+}
+
+/* モデル動画 */
+#modelOverlayVideo {
+  z-index: 2;
+  transform: scaleX(-1);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 透過度調整 */
+.opacity-control {
+  background: #eef5f3;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.opacity-control label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#opacitySlider {
+  width: 80%;
+  accent-color: #147d70;
+}
+
+#opacityValue {
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+#overlayStatus {
+  color: #555;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* モデル動画の調整パネル */
+.adjust-panel {
+  background: #eef5f3;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+/* 各項目の名前 */
+.adjust-panel label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* 調整スライダー */
+.adjust-panel input[type="range"] {
+  width: 100%;
+  accent-color: #147d70;
+  cursor: pointer;
+}
+
+/* 再生速度の選択 */
+.adjust-panel select {
+  width: 100%;
+  margin: 5px 0 10px;
+}
+
+/* リセットボタン */
+#resetAdjust {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* 運動回数の操作 */
+.count-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.count-controls button {
+  flex: 1;
+  font-size: 20px;
+}
+
+/* 記録保存ボタン */
+.record-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* 練習状態 */
+#trainingStatus {
+  color: #147d70;
+  font-weight: bold;
+  margin-top: 12px;
+}
+
+/* 練習履歴 */
+.history-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.history-table th,
+.history-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.history-table th {
+  background: #eef5f3;
+}
+
+.history-table tbody tr:nth-child(even) {
+  background: #f7f9f9;
+}
+
+
+/* 非表示の画面を確実に隠す */
+[hidden] {
+  display: none !important;
+}
+
+/* モード切り替え */
+.mode-switch {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mode-switch button {
+  flex: 1;
+}
+
+/* 患者さん用画面 */
+#patientScreen {
+  padding-top: 15px;
+}
+
+.patient-instruction {
+  font-size: 20px;
+  line-height: 1.7;
+  color: #333;
+}
+
+/* 患者さん用映像表示 */
+#patientVideoArea {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+#patientVideoArea .overlay-container {
+  margin-bottom: 0;
+}
+
+/* 時間と回数 */
+.patient-records {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.patient-record {
+  flex: 1;
+  background: #eef5f3;
+  border-radius: 12px;
+  padding: 20px 10px;
+  text-align: center;
+}
+
+.patient-record span {
+  display: block;
+  font-size: 16px;
+}
+
+.patient-record strong {
+  display: block;
+  font-size: 34px;
+  margin-top: 10px;
+}
+
+/* 大きな操作ボタン */
+.patient-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.patient-buttons button {
+  width: 100%;
+  min-height: 70px;
+  font-size: 23px;
+  font-weight: bold;
+}
+
+#patientStatus {
+  font-size: 18px;
+  margin-top: 15px;
+  color: #147d70;
+}
+
+/* 療法士用画面の確認欄 */
+#therapistUnlock {
+  background: #eef5f3;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 15px 0;
+}
+
+#therapistUnlock h3 {
+  margin-top: 0;
+}
+
+#therapistPin {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 24px;
+  padding: 12px;
+  margin: 12px 0;
+  text-align: center;
+}
+
+.unlock-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.unlock-buttons button {
+  flex: 1;
+  min-height: 50px;
+}
+
+#unlockMessage {
+  font-weight: bold;
+  color: #b42318;
+  margin-top: 10px;
+}
+
+/* 非表示の指定を優先 */
+[hidden] {
+  display: none !important;
+}
+
+/* ===== 第10回：iPad対応 ===== */
+
+/* 画面幅を超えないようにする */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* 患者さん用画面 */
+#patientScreen {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* タッチしやすいボタン */
+.patient-buttons button {
+  min-height: 76px;
+  font-size: 24px;
+  border-radius: 14px;
+  padding: 14px;
+  touch-action: manipulation;
+}
+
+/* 操作できないボタン */
+.patient-buttons button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 練習時間と回数 */
+.patient-record {
+  min-width: 0;
+  padding: 18px 10px;
+}
+
+.patient-record strong {
+  font-size: clamp(28px, 5vw, 42px);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 重ね合わせ映像 */
+#patientVideoArea {
+  width: 100%;
+  min-width: 0;
+}
+
+#patientVideoArea .overlay-container {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+/* 患者さん用画面の文字 */
+.patient-instruction {
+  font-size: clamp(18px, 2.5vw, 24px);
+  line-height: 1.6;
+}
+
+/* スマートフォンや狭い画面 */
+@media (max-width: 600px) {
+
+  .patient-records {
+    gap: 8px;
+  }
+
+  .patient-buttons button {
+    min-height: 72px;
+    font-size: 21px;
+  }
+
+  .mode-switch {
+    flex-wrap: wrap;
+  }
+
+}
+
+/* iPadなどの横向き画面 */
+@media (min-width: 700px) and
+       (orientation: landscape) {
+
+  #patientScreen:not([hidden]) {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    column-gap: 24px;
+    align-items: start;
+  }
+
+  #patientScreen > h2,
+  #patientScreen > .patient-instruction,
+  #patientScreen > h3 {
+    grid-column: 1 / -1;
+  }
+
+  #patientVideoArea {
+    grid-column: 1;
+  }
+
+  #patientControlArea {
+    grid-column: 2;
+  }
+
+  .patient-buttons button {
+    min-height: 80px;
+  }
+
+}
+
+.fullscreen-button {
+  width: 100%;
+  min-height: 52px;
+  margin: 8px 0 16px;
+  padding: 12px;
+  font-size: 18px;
+  border-radius: 12px;
+  touch-action: manipulation;
+}
+
+/* 全画面表示中の患者画面 */
+#patientScreen:fullscreen {
+  background: #ffffff;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 横向きの際は全画面ボタンを左側に配置 */
+@media (min-width: 900px) and
+       (orientation: landscape) {
+
+  #patientFullscreen {
+    grid-column: 1;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+  <main class="app">
+    
+<div class="mode-switch">
+  <button id="therapistMode" class="start">
+    療法士用
+  </button>
+
+  <button id="patientMode" class="stop">
+    自主練習モード
+  </button>
+</div>
+
+<p id="modeStatus" role="status">
+  療法士用画面
+</p>
+
+<!-- 療法士用画面に戻るための確認欄 -->
+<div id="therapistUnlock" hidden>
+
+  <h3>療法士用画面への切り替え</h3>
+
+  <p>
+    療法士用画面に戻るには、
+    確認コードを入力してください。
+  </p>
+
+  <label for="therapistPin">
+    確認コード（4桁）
+  </label>
+
+  <input
+    type="password"
+    id="therapistPin"
+    inputmode="numeric"
+    maxlength="4"
+    autocomplete="off"
+    placeholder="4桁の数字">
+
+  <div class="unlock-buttons">
+    <button id="confirmUnlock" class="start">
+      確認
+    </button>
+
+    <button id="cancelUnlock" class="stop">
+      キャンセル
+    </button>
+  </div>
+
+  <p id="unlockMessage" role="status"></p>
+
+</div>
+<div id="therapistScreen"></div>
+
+    <h1>ULVT</h1>
+    <p class="subtitle">
+      上肢視覚フィードバック訓練
+    </p>
+
+    <h3>運動メニュー</h3>
+
+    <select id="exercise">
+      <option>手指の伸展・屈曲</option>
+      <option>手関節背屈</option>
+      <option>前腕回内・回外</option>
+      <option>前方リーチ</option>
+    </select>
+
+<div class="camera">
+  <video
+    id="cameraVideo"
+    autoplay
+    playsinline
+    muted>
+  </video>
+</div>
+
+    <div class="records">
+
+      <div class="record">
+        練習時間
+        <strong id="timer">00:00</strong>
+      </div>
+
+      <div class="record">
+        運動回数
+        <strong id="count">0回</strong>
+      </div>
+
+    </div>
+
+
+<div class="buttons">
+  <button id="startTraining" class="start">
+    練習開始
+  </button>
+
+  <button id="stopTraining" class="stop">
+    練習終了
+  </button>
+</div>
+
+<div class="count-controls">
+
+  <button id="addCount" class="start">
+    ＋ 1回
+  </button>
+
+  <button id="subtractCount" class="stop">
+    － 1回
+  </button>
+
+</div>
+
+<p id="trainingStatus" role="status">
+  練習待機中
+</p>
+
+<h3>練習結果の保存</h3>
+
+<div class="record-actions">
+
+  <button id="saveTraining" class="start">
+    練習結果を保存
+  </button>
+
+  <button id="exportCSV" class="stop">
+    CSV出力
+  </button>
+
+</div>
+
+<h3>練習履歴</h3>
+
+<div class="history-table-wrap">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>日時</th>
+        <th>運動メニュー</th>
+        <th>時間</th>
+        <th>回数</th>
+      </tr>
+    </thead>
+
+    <tbody id="trainingHistory">
+    </tbody>
+  </table>
+</div>
+
+<div class="buttons camera-buttons">
+  <button
+    id="startCamera"
+    class="start">
+    カメラ開始
+  </button>
+
+  <button
+    id="stopCamera"
+    class="stop">
+    カメラ停止
+  </button>
+</div>
+
+<p id="cameraStatus" role="status">
+  カメラは停止しています
+</p>
+
+<h3>モデル動画の撮影</h3>
+
+<div class="buttons camera-buttons">
+  <button id="startRecording" class="start">
+    撮影開始
+  </button>
+
+  <button id="stopRecording" class="stop">
+    撮影停止
+  </button>
+</div>
+
+<p id="recordingStatus" role="status">
+  撮影待機中
+</p>
+
+<h3>撮影したモデル動画</h3>
+
+<div class="camera">
+  <video
+    id="recordedVideo"
+    controls
+    playsinline
+    loop>
+  </video>
+</div>
+
+<div class="buttons">
+  <button id="flipButton" class="start">
+    左右反転 ON
+  </button>
+</div>
+
+<p class="note">
+  ※ モデル動画は一時的に保持されます。
+  ページを再読み込みすると消去されます。
+</p>
+
+<h3>重ね合わせトレーニング</h3>
+
+<div class="overlay-container">
+
+  <!-- リアルタイムのカメラ映像 -->
+  <video
+    id="liveOverlayVideo"
+    autoplay
+    muted
+    playsinline>
+  </video>
+
+  <!-- 左右反転したモデル動画 -->
+  <video
+    id="modelOverlayVideo"
+    muted
+    playsinline
+    loop>
+  </video>
+
+</div>
+
+<div class="opacity-control">
+
+  <label for="opacitySlider">
+    モデル動画の不透明度
+  </label>
+
+  <input
+    type="range"
+    id="opacitySlider"
+    min="0"
+    max="100"
+    value="50"
+    step="5">
+
+  <span id="opacityValue">50%</span>
+
+</div>
+
+<div class="buttons camera-buttons">
+
+  <button id="startOverlay" class="start">
+    重ね合わせ開始
+  </button>
+
+  <button id="stopOverlay" class="stop">
+    重ね合わせ停止
+  </button>
+
+</div>
+
+<p id="overlayStatus" role="status">
+  トレーニング待機中
+</p>
+
+<h3>モデル動画の詳細調整</h3>
+
+<div class="adjust-panel">
+
+  <label for="speedControl">
+    再生速度
+  </label>
+
+  <select id="speedControl">
+    <option value="0.5">0.5倍</option>
+    <option value="0.75">0.75倍</option>
+    <option value="1" selected>1.0倍</option>
+    <option value="1.5">1.5倍</option>
+  </select>
+
+  <label for="positionX">
+    左右位置：
+    <span id="positionXValue">0px</span>
+  </label>
+
+  <input
+    type="range"
+    id="positionX"
+    min="-150"
+    max="150"
+    value="0"
+    step="5">
+
+  <label for="positionY">
+    上下位置：
+    <span id="positionYValue">0px</span>
+  </label>
+
+  <input
+    type="range"
+    id="positionY"
+    min="-150"
+    max="150"
+    value="0"
+    step="5">
+
+  <label for="scaleControl">
+    拡大・縮小：
+    <span id="scaleValue">100%</span>
+  </label>
+
+  <input
+    type="range"
+    id="scaleControl"
+    min="50"
+    max="200"
+    value="100"
+    step="5">
+
+  <button id="resetAdjust" class="stop">
+    調整をリセット
+  </button>
+
+</div>
+
+    <p class="note">
+      ※ 現在は画面確認用の試作品です。
+      カメラ・記録機能は次の工程で追加します。
+    </p>
+
+  </div>
+<section id="patientScreen" hidden>
+
+  <h2>上肢の自主練習</h2>
+
+  <p class="patient-instruction">
+    画面の動きに合わせて、
+    ゆっくり手を動かしましょう。
+  </p>
+
+  <h3 id="patientExerciseName">
+    手指の伸展・屈曲
+  </h3>
+
+  <!-- 重ね合わせ映像を表示する場所 -->
+  <div id="patientVideoArea"></div>
+
+<button
+  id="patientFullscreen"
+  type="button"
+  class="fullscreen-button">
+  画面を大きく表示
+</button>
+  
+<!-- 患者さん用の操作エリア -->
+<div id="patientControlArea">
+<div class="patient-records">
+
+    <div class="patient-record">
+      <span>練習時間</span>
+      <strong id="patientTimer">00:00</strong>
+    </div>
+
+    <div class="patient-record">
+      <span>運動回数</span>
+      <strong id="patientCount">0回</strong>
+    </div>
+
+  </div>
+
+  <div class="patient-buttons">
+
+    <button id="patientStart" class="start">
+      練習開始
+    </button>
+
+    <button id="patientAddCount" class="start">
+      ＋ 1回できた
+    </button>
+
+    <button id="patientEnd" class="stop">
+      練習終了
+    </button>
+
+  </div>
+
+  <p id="patientStatus" role="status">
+    練習を開始してください。
+  </p>
+</div>
+<!-- 患者さん用の操作エリア終了 -->
+
+
+</section>
+  </main>
+
+
+
+<script>
+  const video = document.getElementById("cameraVideo");
+  const startButton = document.getElementById("startCamera");
+  const stopButton = document.getElementById("stopCamera");
+  const statusText = document.getElementById("cameraStatus");
+
+  let cameraStream = null;
+
+  // カメラを開始する
+  async function startCamera() {
+    try {
+      if (cameraStream) {
+        return;
+      }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        statusText.textContent =
+          "この環境ではカメラを使用できません。";
+        return;
+      }
+
+      statusText.textContent = "カメラを起動しています...";
+
+      startButton.disabled = true;
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+
+      cameraStream = stream;
+      video.srcObject = stream;
+
+      await video.play();
+
+      statusText.textContent = "カメラ起動中";
+
+    } catch (error) {
+      console.error(error);
+
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+
+      video.srcObject = null;
+
+      statusText.textContent =
+        "カメラを起動できませんでした。権限や接続を確認してください。";
+
+    } finally {
+      startButton.disabled = false;
+    }
+  }
+
+  // カメラを停止する
+  function stopCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      cameraStream = null;
+    }
+
+    video.pause();
+    video.srcObject = null;
+
+    statusText.textContent = "カメラは停止しています";
+  }
+
+  startButton.addEventListener("click", startCamera);
+  stopButton.addEventListener("click", stopCamera);
+
+  window.addEventListener("pagehide", stopCamera);
+</script>
+
+<script>
+  // 撮影用の操作部品
+  const startRecButton =
+    document.getElementById("startRecording");
+
+  const stopRecButton =
+    document.getElementById("stopRecording");
+
+  const flipButton =
+    document.getElementById("flipButton");
+
+  const recordedVideo =
+    document.getElementById("recordedVideo");
+
+  const recordingStatus =
+    document.getElementById("recordingStatus");
+
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let recordedUrl = null;
+  let isMirrored = true;
+
+  stopRecButton.disabled = true;
+  recordedVideo.classList.add("mirrored");
+
+  // 撮影開始
+  function startRecording() {
+
+    if (!cameraStream) {
+      recordingStatus.textContent =
+        "先にカメラを開始してください。";
+      return;
+    }
+
+    if (!window.MediaRecorder) {
+      recordingStatus.textContent =
+        "このブラウザは動画撮影に対応していません。";
+      return;
+    }
+
+    if (mediaRecorder &&
+        mediaRecorder.state !== "inactive") {
+      return;
+    }
+
+    recordedChunks = [];
+
+    // ブラウザが対応する動画形式を選択
+    const formats = [
+      "video/webm;codecs=vp8",
+      "video/webm",
+      "video/mp4"
+    ];
+
+    const mimeType = formats.find(type =>
+      MediaRecorder.isTypeSupported(type)
+    );
+
+    try {
+      mediaRecorder = mimeType
+        ? new MediaRecorder(cameraStream, {
+            mimeType: mimeType
+          })
+        : new MediaRecorder(cameraStream);
+
+      mediaRecorder.ondataavailable = event => {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+
+        if (recordedChunks.length === 0) {
+          recordingStatus.textContent =
+            "動画データを取得できませんでした。";
+          return;
+        }
+
+        const blob = new Blob(recordedChunks, {
+          type: mediaRecorder.mimeType ||
+                recordedChunks[0].type
+        });
+
+        // 前の動画データを解放
+        recordedVideo.pause();
+        recordedVideo.removeAttribute("src");
+        recordedVideo.load();
+
+        if (recordedUrl) {
+          URL.revokeObjectURL(recordedUrl);
+        }
+
+        recordedUrl = URL.createObjectURL(blob);
+
+        recordedVideo.src = recordedUrl;
+        recordedVideo.load();
+
+        recordingStatus.textContent =
+          "撮影完了。動画を再生できます。";
+      };
+
+      mediaRecorder.onerror = () => {
+        recordingStatus.textContent =
+          "撮影中にエラーが発生しました。";
+        stopRecButton.disabled = true;
+        startRecButton.disabled = false;
+      };
+
+      mediaRecorder.start();
+
+      startRecButton.disabled = true;
+      stopRecButton.disabled = false;
+
+      recordingStatus.textContent =
+        "撮影中です...";
+
+    } catch (error) {
+      console.error(error);
+
+      recordingStatus.textContent =
+        "撮影を開始できませんでした。";
+
+      startRecButton.disabled = false;
+      stopRecButton.disabled = true;
+    }
+  }
+
+  // 撮影停止
+  function stopRecording() {
+
+    if (mediaRecorder &&
+        mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+    }
+
+    stopRecButton.disabled = true;
+    startRecButton.disabled = false;
+  }
+
+  // 左右反転の切り替え
+  function toggleFlip() {
+
+    isMirrored = !isMirrored;
+
+    recordedVideo.classList.toggle(
+      "mirrored",
+      isMirrored
+    );
+
+    flipButton.textContent = isMirrored
+      ? "左右反転 ON"
+      : "左右反転 OFF";
+  }
+
+  // ボタンと機能を接続
+  startRecButton.addEventListener(
+    "click", startRecording
+  );
+
+  stopRecButton.addEventListener(
+    "click", stopRecording
+  );
+
+  flipButton.addEventListener(
+    "click", toggleFlip
+  );
+
+  // カメラ停止時は撮影も終了
+  stopButton.addEventListener("click", () => {
+    stopRecording();
+  });
+
+  // ページを閉じる際の後処理
+  window.addEventListener("pagehide", () => {
+    stopRecording();
+
+    if (recordedUrl) {
+      URL.revokeObjectURL(recordedUrl);
+    }
+  });
+</script>
+
+<script>
+  // 重ね合わせ用の画面部品
+  const liveOverlayVideo =
+    document.getElementById("liveOverlayVideo");
+
+  const modelOverlayVideo =
+    document.getElementById("modelOverlayVideo");
+
+  const opacitySlider =
+    document.getElementById("opacitySlider");
+
+  const opacityValue =
+    document.getElementById("opacityValue");
+
+  const startOverlayButton =
+    document.getElementById("startOverlay");
+
+  const stopOverlayButton =
+    document.getElementById("stopOverlay");
+
+  const overlayStatus =
+    document.getElementById("overlayStatus");
+
+  let overlayRunning = false;
+
+  // 初期状態
+  stopOverlayButton.disabled = true;
+
+  // 透過度を変更する
+  opacitySlider.addEventListener("input", () => {
+
+    const opacity = Number(opacitySlider.value);
+
+    modelOverlayVideo.style.opacity = opacity / 100;
+
+    opacityValue.textContent = opacity + "%";
+  });
+
+  // 重ね合わせを開始
+  async function startOverlayTraining() {
+
+    if (overlayRunning) {
+      return;
+    }
+
+    // カメラが起動しているか確認
+    if (!cameraStream ||
+        !cameraStream.active) {
+
+      overlayStatus.textContent =
+        "先にカメラを開始してください。";
+
+      return;
+    }
+
+    // 撮影した動画があるか確認
+    if (!recordedUrl) {
+
+      overlayStatus.textContent =
+        "先にモデル動画を撮影してください。";
+
+      return;
+    }
+
+    startOverlayButton.disabled = true;
+
+    try {
+
+      // リアルタイム映像を表示
+      liveOverlayVideo.srcObject = cameraStream;
+
+      // 撮影したモデル動画を読み込む
+      modelOverlayVideo.src = recordedUrl;
+
+      // 第4回の反転設定と同期
+
+      // スライダーの設定を反映
+      modelOverlayVideo.style.opacity =
+        Number(opacitySlider.value) / 100;
+
+      // 2つの映像を再生
+      await liveOverlayVideo.play();
+modelOverlayVideo.playbackRate =
+  Number(speedControl.value);
+updateModelTransform();
+      await modelOverlayVideo.play();
+      overlayRunning = true;
+
+      stopOverlayButton.disabled = false;
+
+      overlayStatus.textContent =
+        "重ね合わせトレーニング中";
+
+    } catch (error) {
+
+      console.error(error);
+
+      liveOverlayVideo.pause();
+      modelOverlayVideo.pause();
+
+      liveOverlayVideo.srcObject = null;
+      modelOverlayVideo.removeAttribute("src");
+      modelOverlayVideo.load();
+
+      overlayStatus.textContent =
+        "重ね合わせを開始できませんでした。";
+
+      startOverlayButton.disabled = false;
+    }
+  }
+
+  // 重ね合わせを停止
+  function stopOverlayTraining() {
+
+    overlayRunning = false;
+
+    liveOverlayVideo.pause();
+    modelOverlayVideo.pause();
+
+    liveOverlayVideo.srcObject = null;
+
+    modelOverlayVideo.removeAttribute("src");
+    modelOverlayVideo.load();
+
+    startOverlayButton.disabled = false;
+    stopOverlayButton.disabled = true;
+
+    overlayStatus.textContent =
+      "トレーニングを停止しました。";
+  }
+
+  // 操作ボタンと接続
+  startOverlayButton.addEventListener(
+    "click",
+    startOverlayTraining
+  );
+
+  stopOverlayButton.addEventListener(
+    "click",
+    stopOverlayTraining
+  );
+
+  // カメラを停止した場合も重ね合わせを終了
+  stopButton.addEventListener(
+    "click",
+    stopOverlayTraining
+  );
+
+  // 新しいモデル動画の撮影を始めたら重畳を終了
+  startRecButton.addEventListener(
+    "click",
+    stopOverlayTraining
+  );
+
+  window.addEventListener(
+    "pagehide",
+    stopOverlayTraining
+  );
+</script>
+
+<script>
+  // 調整用の操作部品を取得
+  const speedControl =
+    document.getElementById("speedControl");
+
+  const positionX =
+    document.getElementById("positionX");
+
+  const positionY =
+    document.getElementById("positionY");
+
+  const scaleControl =
+    document.getElementById("scaleControl");
+
+  const positionXValue =
+    document.getElementById("positionXValue");
+
+  const positionYValue =
+    document.getElementById("positionYValue");
+
+  const scaleValue =
+    document.getElementById("scaleValue");
+
+  const resetAdjust =
+    document.getElementById("resetAdjust");
+
+  // 現在の調整値
+  let modelX = 0;
+  let modelY = 0;
+  let modelScale = 1;
+
+  // 位置・大きさ・左右反転を反映
+  function updateModelTransform() {
+
+    const flip = isMirrored ? -1 : 1;
+
+    modelOverlayVideo.style.transform =
+      `translate(${modelX}px, ${modelY}px)
+       scale(${flip * modelScale}, ${modelScale})`;
+  }
+
+  // 再生速度を変更
+  speedControl.addEventListener("change", () => {
+
+    const speed = Number(speedControl.value);
+
+    modelOverlayVideo.playbackRate = speed;
+
+  });
+
+  // 左右位置を変更
+  positionX.addEventListener("input", () => {
+
+    modelX = Number(positionX.value);
+
+    positionXValue.textContent =
+      modelX + "px";
+
+    updateModelTransform();
+
+  });
+
+  // 上下位置を変更
+  positionY.addEventListener("input", () => {
+
+    modelY = Number(positionY.value);
+
+    positionYValue.textContent =
+      modelY + "px";
+
+    updateModelTransform();
+
+  });
+
+  // 拡大・縮小
+  scaleControl.addEventListener("input", () => {
+
+    modelScale =
+      Number(scaleControl.value) / 100;
+
+    scaleValue.textContent =
+      scaleControl.value + "%";
+
+    updateModelTransform();
+
+  });
+
+  // 調整値を初期状態に戻す
+  resetAdjust.addEventListener("click", () => {
+
+    modelX = 0;
+    modelY = 0;
+    modelScale = 1;
+
+    positionX.value = 0;
+    positionY.value = 0;
+    scaleControl.value = 100;
+
+    speedControl.value = 1;
+
+    positionXValue.textContent = "0px";
+    positionYValue.textContent = "0px";
+    scaleValue.textContent = "100%";
+
+    modelOverlayVideo.playbackRate = 1;
+
+    updateModelTransform();
+
+  });
+
+  // 重ね合わせ開始時にも設定を反映
+  startOverlayButton.addEventListener(
+    "click",
+    () => {
+
+      modelOverlayVideo.playbackRate =
+        Number(speedControl.value);
+
+      updateModelTransform();
+
+    }
+  );
+
+  // 初期設定を反映
+  updateModelTransform();
+</script>
+
+<script>
+  // 練習記録に使用する画面部品
+  const startTrainingButton =
+    document.getElementById("startTraining");
+
+  const stopTrainingButton =
+    document.getElementById("stopTraining");
+
+  const addCountButton =
+    document.getElementById("addCount");
+
+  const subtractCountButton =
+    document.getElementById("subtractCount");
+
+  const saveTrainingButton =
+    document.getElementById("saveTraining");
+
+  const exportCSVButton =
+    document.getElementById("exportCSV");
+
+  const timerDisplay =
+    document.getElementById("timer");
+
+  const countDisplay =
+    document.getElementById("count");
+
+  const trainingStatus =
+    document.getElementById("trainingStatus");
+
+  const exerciseSelect =
+    document.getElementById("exercise");
+
+  const historyBody =
+    document.getElementById("trainingHistory");
+
+  // 練習状態を管理
+  let trainingRunning = false;
+  let trainingStartedAt = null;
+  let trainingEndedAt = null;
+
+  let trainingStartTime = 0;
+  let elapsedMilliseconds = 0;
+  let timerInterval = null;
+
+  let exerciseCount = 0;
+  let lastSaved = false;
+
+  const STORAGE_KEY = "ulvt-training-history-v1";
+
+  // 時間を「分:秒」に変換
+  function formatTime(milliseconds) {
+    const totalSeconds =
+      Math.floor(milliseconds / 1000);
+
+    const minutes =
+      Math.floor(totalSeconds / 60);
+
+    const seconds =
+      totalSeconds % 60;
+
+    return (
+      String(minutes).padStart(2, "0") +
+      ":" +
+      String(seconds).padStart(2, "0")
+    );
+  }
+
+  // 現在の練習時間を取得
+  function getElapsedTime() {
+    if (trainingRunning) {
+      return Math.max(
+        0,
+        performance.now() - trainingStartTime
+      );
+    }
+
+    return elapsedMilliseconds;
+  }
+
+  // 練習時間の表示を更新
+  function updateTimer() {
+    timerDisplay.textContent =
+      formatTime(getElapsedTime());
+  }
+
+  // 回数表示を更新
+  function updateCount() {
+    countDisplay.textContent =
+      exerciseCount + "回";
+  }
+
+  // ボタンの状態を更新
+  function updateTrainingButtons() {
+    startTrainingButton.disabled = trainingRunning;
+    stopTrainingButton.disabled = !trainingRunning;
+
+    addCountButton.disabled = !trainingRunning;
+    subtractCountButton.disabled = !trainingRunning;
+
+    saveTrainingButton.disabled =
+      trainingRunning ||
+      trainingStartedAt === null ||
+      lastSaved;
+  }
+
+  // 練習開始
+  function startTraining() {
+    if (trainingRunning) return;
+
+    clearInterval(timerInterval);
+
+    trainingRunning = true;
+    trainingStartedAt = new Date();
+    trainingEndedAt = null;
+
+    trainingStartTime = performance.now();
+    elapsedMilliseconds = 0;
+
+    exerciseCount = 0;
+    lastSaved = false;
+
+    updateTimer();
+    updateCount();
+    updateTrainingButtons();
+
+    trainingStatus.textContent =
+      "練習中です";
+
+    timerInterval = setInterval(updateTimer, 250);
+  }
+
+  // 練習終了
+  function stopTraining() {
+    if (!trainingRunning) return;
+
+    elapsedMilliseconds = getElapsedTime();
+
+    trainingRunning = false;
+    trainingEndedAt = new Date();
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    updateTimer();
+    updateTrainingButtons();
+
+    trainingStatus.textContent =
+      "練習終了。結果を保存できます。";
+  }
+
+  // 運動回数を1回追加
+  function addCount() {
+    if (!trainingRunning) return;
+
+    exerciseCount++;
+    updateCount();
+  }
+
+  // 運動回数を1回減らす
+  function subtractCount() {
+    if (!trainingRunning) return;
+
+    exerciseCount =
+      Math.max(0, exerciseCount - 1);
+
+    updateCount();
+  }
+
+  // 保存済みの練習履歴を取得
+  function getHistory() {
+    try {
+      const data =
+        localStorage.getItem(STORAGE_KEY);
+
+      const parsed = data ? JSON.parse(data) : [];
+
+      return Array.isArray(parsed) ? parsed : [];
+
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
+
+  // 履歴を画面に表示
+  function showHistory() {
+    historyBody.replaceChildren();
+
+    const history = getHistory();
+
+    if (history.length === 0) {
+      const row = historyBody.insertRow();
+      const cell = row.insertCell();
+
+      cell.colSpan = 4;
+      cell.textContent = "記録はまだありません";
+      return;
+    }
+
+    history.slice().reverse().forEach(record => {
+      const row = historyBody.insertRow();
+
+      const dateCell = row.insertCell();
+      const exerciseCell = row.insertCell();
+      const timeCell = row.insertCell();
+      const countCell = row.insertCell();
+
+      dateCell.textContent =
+        new Date(record.startedAt).toLocaleString("ja-JP");
+
+      exerciseCell.textContent = record.exercise;
+      timeCell.textContent =
+        formatTime(record.durationMs);
+
+      countCell.textContent = record.count + "回";
+    });
+  }
+
+  // 練習結果を保存
+  function saveTraining() {
+    if (trainingRunning ||
+        trainingStartedAt === null ||
+        lastSaved) {
+      return;
+    }
+
+    const record = {
+      startedAt: trainingStartedAt.toISOString(),
+      endedAt: trainingEndedAt.toISOString(),
+      exercise: exerciseSelect.value,
+      durationMs: Math.round(elapsedMilliseconds),
+      count: exerciseCount
+    };
+
+    const history = getHistory();
+    history.push(record);
+
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(history)
+      );
+
+      lastSaved = true;
+      updateTrainingButtons();
+      showHistory();
+
+      trainingStatus.textContent =
+        "練習結果を保存しました。";
+
+    } catch (error) {
+      console.error(error);
+
+      trainingStatus.textContent =
+        "保存に失敗しました。保存領域を確認してください。";
+    }
+  }
+
+  // CSV出力用の文字列を整える
+  function csvCell(value) {
+    const text = String(value);
+
+    return '"' +
+      text.replace(/"/g, '""') +
+      '"';
+  }
+
+  // Excelで開けるCSVファイルを作成
+  function exportCSV() {
+    const history = getHistory();
+
+    if (history.length === 0) {
+      trainingStatus.textContent =
+        "出力する練習履歴がありません。";
+      return;
+    }
+
+    const rows = [
+      ["開始日時", "終了日時",
+       "運動メニュー", "練習時間（秒）", "運動回数"]
+    ];
+
+    history.forEach(record => {
+      rows.push([
+        new Date(record.startedAt).toLocaleString("ja-JP"),
+        new Date(record.endedAt).toLocaleString("ja-JP"),
+        record.exercise,
+        Math.round(record.durationMs / 1000),
+        record.count
+      ]);
+    });
+
+    const csv = rows
+      .map(row => row.map(csvCell).join(","))
+      .join("\r\n");
+
+    // UTF-8 BOMを追加して日本語の文字化けを軽減
+    const blob = new Blob(
+      ["\uFEFF" + csv],
+      { type: "text/csv;charset=utf-8;" }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ULVT_練習記録.csv";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    trainingStatus.textContent =
+      "CSVファイルを出力しました。";
+  }
+
+  // ボタンと機能を接続
+  startTrainingButton.addEventListener(
+    "click", startTraining
+  );
+
+  stopTrainingButton.addEventListener(
+    "click", stopTraining
+  );
+
+  addCountButton.addEventListener(
+    "click", addCount
+  );
+
+  subtractCountButton.addEventListener(
+    "click", subtractCount
+  );
+
+  saveTrainingButton.addEventListener(
+    "click", saveTraining
+  );
+
+  exportCSVButton.addEventListener(
+    "click", exportCSV
+  );
+
+  // 初期表示
+  updateTimer();
+  updateCount();
+  updateTrainingButtons();
+  showHistory();
+
+  // ページ終了時にタイマーを解除
+  window.addEventListener("pagehide", () => {
+    clearInterval(timerInterval);
+  });
+</script>
+
+<script>
+  // モード切り替えボタン
+  const therapistModeButton =
+    document.getElementById("therapistMode");
+
+  const patientModeButton =
+    document.getElementById("patientMode");
+
+  const therapistScreen =
+    document.getElementById("therapistScreen");
+
+  const patientScreen =
+    document.getElementById("patientScreen");
+
+  const modeStatus =
+    document.getElementById("modeStatus");
+
+  // 患者さん用の操作部品
+  const patientVideoArea =
+    document.getElementById("patientVideoArea");
+
+  const patientTimer =
+    document.getElementById("patientTimer");
+
+  const patientCount =
+    document.getElementById("patientCount");
+
+  const patientExerciseName =
+    document.getElementById("patientExerciseName");
+
+  const patientStart =
+    document.getElementById("patientStart");
+
+  const patientAddCount =
+    document.getElementById("patientAddCount");
+
+  const patientEnd =
+    document.getElementById("patientEnd");
+
+  const patientStatus =
+    document.getElementById("patientStatus");
+
+  // 重ね合わせ映像の元の位置を記憶
+  const originalOverlayParent =
+    document.querySelector(
+      ".overlay-container"
+    ).parentElement;
+
+  const originalOverlayNext =
+    document.querySelector(
+      ".overlay-container"
+    ).nextSibling;
+
+  const overlayElement =
+    document.querySelector(
+      ".overlay-container"
+    );
+
+  // 患者さん用表示を更新
+  function updatePatientDisplay() {
+
+    patientTimer.textContent =
+      timerDisplay.textContent;
+
+    patientCount.textContent =
+      countDisplay.textContent;
+
+    patientExerciseName.textContent =
+      exerciseSelect.value;
+
+    patientStart.disabled = trainingRunning;
+    patientAddCount.disabled = !trainingRunning;
+    patientEnd.disabled = !trainingRunning;
+    
+// 練習中は療法士用画面への切り替えを無効化
+therapistModeButton.disabled = trainingRunning;
+
+  }
+
+  // 療法士用画面へ切り替え
+  function showTherapistMode() {
+
+    // 重ね合わせ映像を元の場所へ戻す
+    originalOverlayParent.insertBefore(
+      overlayElement,
+      originalOverlayNext
+    );
+
+    patientScreen.hidden = true;
+    therapistScreen.hidden = false;
+
+    modeStatus.textContent =
+      "療法士用画面";
+
+    updatePatientDisplay();
+  }
+
+  // 自主練習モードへ切り替え
+  function showPatientMode() {
+    
+    therapistUnlock.hidden = true;
+    therapistPin.value = "";
+    unlockMessage.textContent = "";
+
+    // 重ね合わせ映像を患者さん用画面へ移動
+    patientVideoArea.appendChild(
+      overlayElement
+    );
+
+    therapistScreen.hidden = true;
+    patientScreen.hidden = false;
+
+    modeStatus.textContent =
+      "自主練習モード";
+
+    updatePatientDisplay();
+  }
+
+  // 患者さん用ボタンを既存の機能と接続
+  patientStart.addEventListener("click", () => {
+    startTraining();
+    lastCountTap = 0;
+    updatePatientDisplay();
+
+    patientStatus.textContent =
+      "練習中です。";
+  });
+
+  
+
+// 最後に回数ボタンを押した時刻
+let lastCountTap = 0;
+
+patientAddCount.addEventListener("click", () => {
+
+  if (!trainingRunning) {
+    return;
+  }
+
+  const now = performance.now();
+
+  // 0.4秒以内の連続操作を無効にする
+  if (now - lastCountTap < 400) {
+    return;
+  }
+
+  lastCountTap = now;
+
+  // 運動回数を追加
+  addCount();
+
+  // 患者さん用画面を更新
+  updatePatientDisplay();
+
+});
+
+  
+patientEnd.addEventListener("click", () => {
+
+  // 練習していない場合は処理しない
+  if (!trainingRunning) {
+    return;
+  }
+
+  // 練習時間の計測を終了
+  stopTraining();
+
+  // 練習結果を保存
+  saveTraining();
+
+  // 患者さん用画面を更新
+  updatePatientDisplay();
+
+  // 保存結果を確認
+  if (lastSaved) {
+
+    patientStatus.textContent =
+      "練習が終了しました。結果を保存しました。";
+
+  } else {
+
+    patientStatus.textContent =
+      "練習は終了しましたが、保存できませんでした。療法士にお知らせください。";
+
+  }
+
+});
+
+  // モード切り替えボタン
+  
+
+therapistModeButton.addEventListener(
+  "click",
+  () => {
+
+    // すでに療法士用画面なら何もしない
+    if (!therapistScreen.hidden) {
+      return;
+    }
+
+    // 確認コード入力欄を表示
+    therapistUnlock.hidden = false;
+
+    therapistPin.value = "";
+    unlockMessage.textContent = "";
+
+    therapistPin.focus();
+  }
+);
+
+  patientModeButton.addEventListener(
+    "click",
+    showPatientMode
+  );
+
+  // 療法士用の操作でも患者表示を更新
+  startTrainingButton.addEventListener(
+    "click",
+    updatePatientDisplay
+  );
+
+  stopTrainingButton.addEventListener(
+    "click",
+    updatePatientDisplay
+  );
+
+  addCountButton.addEventListener(
+    "click",
+    updatePatientDisplay
+  );
+
+  subtractCountButton.addEventListener(
+    "click",
+    updatePatientDisplay
+  );
+
+  exerciseSelect.addEventListener(
+    "change",
+    updatePatientDisplay
+  );
+
+  // 練習中の時間表示を同期
+  setInterval(() => {
+    if (!patientScreen.hidden) {
+      updatePatientDisplay();
+    }
+  }, 250);
+
+  // 初期表示
+  showTherapistMode();
+
+// 確認コード（試作用）
+const THERAPIST_PIN = "1234";
+
+// 確認欄の部品を取得
+const therapistUnlock =
+  document.getElementById("therapistUnlock");
+
+const therapistPin =
+  document.getElementById("therapistPin");
+
+const confirmUnlock =
+  document.getElementById("confirmUnlock");
+
+const cancelUnlock =
+  document.getElementById("cancelUnlock");
+
+const unlockMessage =
+  document.getElementById("unlockMessage");
+
+// 確認コードの判定
+function checkTherapistPin() {
+
+  const enteredPin = therapistPin.value;
+
+  if (enteredPin === THERAPIST_PIN) {
+
+    therapistUnlock.hidden = true;
+
+    therapistPin.value = "";
+    unlockMessage.textContent = "";
+
+    showTherapistMode();
+
+  } else {
+
+    unlockMessage.textContent =
+      "確認コードが違います。";
+
+    therapistPin.value = "";
+    therapistPin.focus();
+
+  }
+}
+
+// 確認ボタン
+confirmUnlock.addEventListener(
+  "click",
+  checkTherapistPin
+);
+
+// Enterキーでも確認できる
+therapistPin.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (event.key === "Enter") {
+      checkTherapistPin();
+    }
+
+  }
+);
+
+// キャンセルボタン
+cancelUnlock.addEventListener(
+  "click",
+  () => {
+
+    therapistUnlock.hidden = true;
+
+    therapistPin.value = "";
+    unlockMessage.textContent = "";
+
+  }
+);
+</script>
+<script>
+  const patientFullscreen =
+    document.getElementById("patientFullscreen");
+
+  patientFullscreen.addEventListener("click", async () => {
+
+    // ブラウザが全画面表示に対応しているか確認
+    if (!patientScreen.requestFullscreen) {
+
+      patientStatus.textContent =
+        "この端末では全画面表示に対応していません。";
+
+      return;
+    }
+
+    try {
+
+      if (document.fullscreenElement) {
+
+        await document.exitFullscreen();
+
+      } else {
+
+        await patientScreen.requestFullscreen();
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+      patientStatus.textContent =
+        "全画面表示に切り替えられませんでした。";
+
+    }
+
+  });
+
+  // 全画面表示の状態に合わせてボタン名を変更
+  document.addEventListener(
+    "fullscreenchange",
+    () => {
+
+      patientFullscreen.textContent =
+        document.fullscreenElement
+          ? "通常表示に戻す"
+          : "画面を大きく表示";
+
+    }
+  );
+</script>
+</body>
+</html>
